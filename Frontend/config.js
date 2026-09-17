@@ -1,7 +1,7 @@
 window.CONFIG = {
   name: "Hiền CUTE",
   insideTitle: "Gửi Hiền 💖",
-  insideMsg: "Chúc em luôn xinh đẹp, vui vẻ và gặp nhiều điều may mắn nhé!",
+  insideMsg: "",
 
   images: [
   "images/anh1.jpg",

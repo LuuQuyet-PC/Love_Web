@@ -5,32 +5,28 @@ import { createHeartParticles } from './effects/heart-particles.js';
 import { createSolarSystem } from './effects/solar-system.js';
 import { createBlackHole } from './effects/black-hole.js';
 import { createPlanets } from './effects/planets.js';
-startLedBorder();
+import { createNebula } from './effects/nebula.js';
 
 const CFG = window.CONFIG;
-// 🎯 Hue toàn cục — tất cả chữ dùng chung
-let globalHue = 0.5;
 if (!CFG) throw new Error('CONFIG missing');
+
+let globalHue = 0.5;
 
 /* =========================================================
    RENDERER / SCENE / CAMERA
    ========================================================= */
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  powerPreference: 'high-performance',
+  canvas, antialias: true, powerPreference: 'high-performance',
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000, 1);
-
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-
 const camera = new THREE.PerspectiveCamera(
   60, window.innerWidth / window.innerHeight, 0.1, 400
 );
@@ -52,21 +48,19 @@ scene.add(l1);
   }
   g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.35,
-    transparent: true,
-    opacity: 0.7,
-    toneMapped: false,
+    color: 0xffffff, size: 0.35,
+    transparent: true, opacity: 0.7, toneMapped: false,
   })));
 }
-// 🎯 Trái tim 3D bằng hạt
+
+/* =========================================================
+   HIỆU ỨNG
+   ========================================================= */
 const heartParticles = createHeartParticles(scene);
-// 🎯 Hệ mặt trời mini
-const solarSystem = createSolarSystem(scene);
-// 🎯 Hố đen
-const blackHole = createBlackHole(scene);
-// 🎯 Hành tinh có vành đai — dưới tim
-const planets = createPlanets(scene);
+const solarSystem   = createSolarSystem(scene);
+const blackHole     = createBlackHole(scene);
+const planets       = createPlanets(scene);
+const nebula        = createNebula(scene);
 
 /* =========================================================
    ẢNH SPRITE
@@ -75,13 +69,10 @@ const texLoader = new THREE.TextureLoader();
 texLoader.crossOrigin = 'anonymous';
 
 function roundImageTexture(img, radiusRatio = 0.08) {
-  const w = img.width;
-  const h = img.height;
+  const w = img.width, h = img.height;
   const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
+  c.width = w; c.height = h;
   const ctx = c.getContext('2d');
-
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -111,11 +102,8 @@ function roundImageTexture(img, radiusRatio = 0.08) {
 
 function makeImageSprite(src) {
   const mat = new THREE.SpriteMaterial({
-    transparent: true,
-    depthWrite: false,
-    depthTest: false,
-    toneMapped: false,
-    color: 0xdddddd,
+    transparent: true, depthWrite: false, depthTest: false,
+    toneMapped: false, color: 0xdddddd,
   });
   const sp = new THREE.Sprite(mat);
   sp.userData.ratio = 0.75;
@@ -130,7 +118,6 @@ function makeImageSprite(src) {
   };
   img.onerror = () => {};
   img.src = src;
-
   return sp;
 }
 
@@ -154,10 +141,7 @@ function makeTextSharp(text) {
   t.material.opacity = 1;
   t.material.toneMapped = false;
   t.sync();
-
   t.userData.baseSize = CFG.wordSizeMin + Math.random() * (CFG.wordSizeMax - CFG.wordSizeMin);
-  // 🎯 Không còn hue riêng nữa
-
   return t;
 }
 
@@ -172,7 +156,6 @@ function zToT(z) {
   const t = (z - CFG.zFar) / (CFG.zNear - CFG.zFar);
   return Math.max(0, Math.min(1, t));
 }
-
 function fadeByY(y) {
   const fadeIn  = Math.min(1, (TOP_Y - y) / FADE_ZONE);
   const fadeOut = Math.min(1, (y - BOT_Y) / FADE_ZONE);
@@ -190,22 +173,16 @@ for (let i = 0; i < CFG.imageCount; i++) {
   const col = i % CFG.imageCols;
   const colCenterX = -CFG.areaX / 2 + imgColWidth * (col + 0.5);
   const jitterX = (Math.random() - 0.5) * imgColWidth * 0.5;
-
   const src = CFG.images[i % CFG.images.length];
   const sp = makeImageSprite(src);
-
   const phase = (i / CFG.imageCount) * CFG.areaY;
   sp.position.set(
     colCenterX + jitterX,
     TOP_Y - phase,
     CFG.zFar + Math.random() * (CFG.zNear - CFG.zFar)
   );
-
   scene.add(sp);
-  items.push({
-    obj: sp, type: 'img',
-    speed: 0.28 + Math.random() * 0.15,
-  });
+  items.push({ obj: sp, type: 'img', speed: 0.28 + Math.random() * 0.15 });
 }
 
 // CHỮ
@@ -214,22 +191,16 @@ for (let i = 0; i < CFG.wordCount; i++) {
   const col = i % CFG.wordCols;
   const colCenterX = -CFG.areaX / 2 + wordColWidth * (col + 0.5);
   const jitterX = (Math.random() - 0.5) * wordColWidth * 0.5;
-
   const text = CFG.words[Math.floor(Math.random() * CFG.words.length)];
   const t = makeTextSharp(text);
-
   const phase = (i / CFG.wordCount) * CFG.areaY;
   t.position.set(
     colCenterX + jitterX,
     TOP_Y - phase,
     CFG.zFar + Math.random() * (CFG.zNear - CFG.zFar)
   );
-
   scene.add(t);
-  items.push({
-    obj: t, type: 'word',
-    speed: 0.1 + Math.random() * 0.12,
-  });
+  items.push({ obj: t, type: 'word', speed: 0.1 + Math.random() * 0.12 });
 }
 
 /* =========================================================
@@ -258,12 +229,11 @@ window.addEventListener('pointermove', (e) => {
   cam.ly = e.clientY;
   cam.tyaw -= dx * 0.006;
   cam.tpitch += dy * 0.004;
-  cam.tpitch = Math.max(-0.6, Math.min(0.6, cam.tpitch));
 });
 window.addEventListener('wheel', (e) => {
   if (!cam.inside) return;
   cam.tdist += e.deltaY * 0.05;
-  cam.tdist = Math.max(20, Math.min(110, cam.tdist));
+  cam.tdist = Math.max(7, Math.min(220, cam.tdist));
 }, { passive: true });
 
 /* =========================================================
@@ -277,16 +247,14 @@ function animate() {
   const now = performance.now();
   const dt = (now - lastTime) / 1000;
   lastTime = now;
-  // 🎯 Cập nhật hue toàn cục — chạy theo thời gian
+
   globalHue = (globalHue + dt * 0.08) % 1;
 
   cam.yaw   += (cam.tyaw   - cam.yaw)   * 0.18;
   cam.pitch += (cam.tpitch - cam.pitch) * 0.18;
   cam.dist  += (cam.tdist  - cam.dist)  * 0.12;
 
-  const yaw = cam.yaw;
-  const pitch = cam.pitch;
-  const r = cam.dist;
+  const yaw = cam.yaw, pitch = cam.pitch, r = cam.dist;
   camera.position.x = Math.sin(yaw) * r * Math.cos(pitch);
   camera.position.y = Math.sin(pitch) * r;
   camera.position.z = Math.cos(yaw) * r * Math.cos(pitch);
@@ -309,27 +277,24 @@ function animate() {
       const ratio = o.userData.ratio || 0.75;
       o.scale.set(h * ratio, h, 1);
       o.material.opacity = fade * (0.85 + t * 0.15);
-
     } else if (it.type === 'word') {
       const base = o.userData.baseSize;
       const k = 0.5 + t * 0.7;
       o.scale.set(base * k, base * k, 1);
       o.material.opacity = fade * (0.95 + t * 0.05);
-
-      // 🎯 Dùng hue toàn cục — tất cả chữ cùng màu
       const c = new THREE.Color().setHSL(globalHue, 0.85, 0.65);
       o.outlineColor = '#' + c.getHexString();
       o.sync();
     }
   }
-    // 🎯 Cập nhật trái tim
+
   heartParticles.update(now * 0.001);
   solarSystem.update(now * 0.001);
   blackHole.update(now * 0.001);
   planets.update(now * 0.001);
+  nebula.update(now * 0.001, dt);
 
   renderer.render(scene, camera);
-
 }
 animate();
 
@@ -350,19 +315,12 @@ document.getElementById('insideMsg').textContent    = CFG.insideMsg;
 const landing = document.getElementById('landing');
 const uiEl = document.getElementById('ui');
 
-document.getElementById('enterBtn').addEventListener('click', () => {
-  landing.classList.add('hide');
-  cam.inside = true;
-  setTimeout(() => uiEl.classList.add('show'), 1200);
-});
-
 /* =========================================================
    NHẠC
    ========================================================= */
 const bgMusic = document.getElementById('bgMusic');
 const musicBtn = document.getElementById('musicBtn');
 bgMusic.volume = CFG.musicVolume || 0.4;
-
 let musicPlaying = false;
 
 function updateMusicBtn() {
@@ -381,7 +339,15 @@ musicBtn.addEventListener('click', () => {
   updateMusicBtn();
 });
 
+/* =========================================================
+   NÚT MỞ THIỆP — 1 LISTENER DUY NHẤT
+   ========================================================= */
 document.getElementById('enterBtn').addEventListener('click', () => {
+  landing.classList.add('hide');
+  cam.inside = true;
+  setTimeout(() => uiEl.classList.add('show'), 1200);
+
+  // Nhạc
   bgMusic.play().then(() => {
     musicPlaying = true;
     updateMusicBtn();
@@ -390,17 +356,8 @@ document.getElementById('enterBtn').addEventListener('click', () => {
     updateMusicBtn();
   });
 
-  setTimeout(() => {
-    musicBtn.classList.add('show');
-  }, 1500);
-});
-document.getElementById('enterBtn').addEventListener('click', () => {
-  landing.classList.add('hide');
-  cam.inside = true;
-  setTimeout(() => uiEl.classList.add('show'), 1200);
+  setTimeout(() => musicBtn.classList.add('show'), 1500);
 
-  // 🎯 Bật viền LED
-  setTimeout(() => {
-    startLedBorder();
-  }, 800);
+  // Viền LED
+  setTimeout(() => startLedBorder(), 800);
 });
