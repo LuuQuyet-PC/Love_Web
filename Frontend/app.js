@@ -1,10 +1,15 @@
 import * as THREE from 'three';
 import { Text } from 'troika-three-text';
 import { startLedBorder } from './effects/led-border.js';
-
+import { createHeartParticles } from './effects/heart-particles.js';
+import { createSolarSystem } from './effects/solar-system.js';
+import { createBlackHole } from './effects/black-hole.js';
+import { createPlanets } from './effects/planets.js';
 startLedBorder();
 
 const CFG = window.CONFIG;
+// 🎯 Hue toàn cục — tất cả chữ dùng chung
+let globalHue = 0.5;
 if (!CFG) throw new Error('CONFIG missing');
 
 /* =========================================================
@@ -54,6 +59,14 @@ scene.add(l1);
     toneMapped: false,
   })));
 }
+// 🎯 Trái tim 3D bằng hạt
+const heartParticles = createHeartParticles(scene);
+// 🎯 Hệ mặt trời mini
+const solarSystem = createSolarSystem(scene);
+// 🎯 Hố đen
+const blackHole = createBlackHole(scene);
+// 🎯 Hành tinh có vành đai — dưới tim
+const planets = createPlanets(scene);
 
 /* =========================================================
    ẢNH SPRITE
@@ -143,8 +156,7 @@ function makeTextSharp(text) {
   t.sync();
 
   t.userData.baseSize = CFG.wordSizeMin + Math.random() * (CFG.wordSizeMax - CFG.wordSizeMin);
-  t.userData.hue = Math.random() * 360;
-  t.userData.hueSpeed = 20 + Math.random() * 30;
+  // 🎯 Không còn hue riêng nữa
 
   return t;
 }
@@ -265,6 +277,8 @@ function animate() {
   const now = performance.now();
   const dt = (now - lastTime) / 1000;
   lastTime = now;
+  // 🎯 Cập nhật hue toàn cục — chạy theo thời gian
+  globalHue = (globalHue + dt * 0.08) % 1;
 
   cam.yaw   += (cam.tyaw   - cam.yaw)   * 0.18;
   cam.pitch += (cam.tpitch - cam.pitch) * 0.18;
@@ -302,14 +316,20 @@ function animate() {
       o.scale.set(base * k, base * k, 1);
       o.material.opacity = fade * (0.95 + t * 0.05);
 
-      o.userData.hue = (o.userData.hue + o.userData.hueSpeed * dt) % 360;
-      const c = new THREE.Color().setHSL(o.userData.hue / 360, 0.85, 0.65);
+      // 🎯 Dùng hue toàn cục — tất cả chữ cùng màu
+      const c = new THREE.Color().setHSL(globalHue, 0.85, 0.65);
       o.outlineColor = '#' + c.getHexString();
       o.sync();
     }
   }
+    // 🎯 Cập nhật trái tim
+  heartParticles.update(now * 0.001);
+  solarSystem.update(now * 0.001);
+  blackHole.update(now * 0.001);
+  planets.update(now * 0.001);
 
   renderer.render(scene, camera);
+
 }
 animate();
 

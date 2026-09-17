@@ -1,5 +1,5 @@
 // =========================================================
-// HIỆU ỨNG: VIỀN LED — DÀY, BO GÓC, NHẤP NHÁY NHẸ
+// HIỆU ỨNG: VIỀN LED — DÀY, NHẤP NHÁY MẠNH
 // =========================================================
 export function startLedBorder() {
   const frame = document.createElement('div');
@@ -15,58 +15,49 @@ export function startLedBorder() {
         inset: 0;
         pointer-events: none;
         z-index: 99;
-        padding: 8px;
+        padding: 16px;                        /* 🎯 viền dày 16px */
         box-sizing: border-box;
-        border-radius: 24px;                  /* 🎯 bo tròn 4 góc */
-        overflow: hidden;
+        border-radius: 20px;
 
         background: linear-gradient(
           90deg,
-          #ff5fa2, #ffb6d9, #a8e6ff, #c8b6ff, #b6ffcc, #ff5fa2
+          #ff5fa2, #ffb6d9, #a8e6ff, #c8b6ff, #b6ffcc, #ffeb3b, #ff5fa2
         );
-        background-size: 300% 100%;
+        background-size: 400% 100%;
 
-        /* 🎯 Chỉ 1 animation — chạy màu. Không dùng filter để khỏi lag */
-        animation: ledSlide 6s linear infinite;
+        /* 🎯 2 animation: chạy màu + nhấp nháy */
+        animation:
+          ledSlide 4s linear infinite,
+          ledBlink 0.8s ease-in-out infinite;
 
-        /* Mask để ruột trong suốt */
         -webkit-mask:
           linear-gradient(#000 0 0) content-box,
           linear-gradient(#000 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
 
-        /* Glow nhẹ — chỉ 2 lớp để đỡ lag */
+        /* 🎯 Glow mạnh */
         box-shadow:
-          inset 0 0 15px rgba(255, 95, 162, 0.6),
-          inset 0 0 30px rgba(168, 230, 255, 0.4);
+          inset 0 0 25px rgba(255, 95, 162, 0.8),
+          inset 0 0 50px rgba(168, 230, 255, 0.6),
+          inset 0 0 80px rgba(200, 182, 255, 0.4);
 
-        will-change: background-position;
+        will-change: background-position, opacity;
       }
 
       @keyframes ledSlide {
         0%   { background-position: 0% 50%; }
-        100% { background-position: 300% 50%; }
+        100% { background-position: 400% 50%; }
       }
 
-      /* 🎯 Lớp phủ mờ nhấp nháy — dùng opacity, nhẹ hơn filter */
-      #led-frame::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 24px;
-        background: radial-gradient(
-          circle at 50% 50%,
-          rgba(255, 150, 200, 0) 60%,
-          rgba(255, 150, 200, 0.25) 100%
-        );
-        animation: ledPulse 1.5s ease-in-out infinite;
-        pointer-events: none;
-      }
-
-      @keyframes ledPulse {
-        0%, 100% { opacity: 0.4; }
-        50%      { opacity: 1; }
+      /* 🎯 Nhấp nháy mạnh kiểu LED */
+      @keyframes ledBlink {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.65;
+        }
       }
     `;
     document.head.appendChild(style);
