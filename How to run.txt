@@ -1,0 +1,6 @@
+cd "D:\love web"
+python -m http.server 8000
+
+
+xong thì dan :
+http://localhost:8000/Frontend/
