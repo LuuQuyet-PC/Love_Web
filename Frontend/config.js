@@ -47,7 +47,7 @@ window.CONFIG = {
   wordSizeMax: 2.6,
 
   camYaw: -0.35,
-  camPitch: 0.15,
+  camPitch: 0.25,
 
   musicVolume: 0.4,
 };

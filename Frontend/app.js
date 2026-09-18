@@ -6,6 +6,13 @@ import { createSolarSystem } from './effects/solar-system.js';
 import { createBlackHole } from './effects/black-hole.js';
 import { createPlanets } from './effects/planets.js';
 import { createNebula } from './effects/nebula.js';
+import { createGalaxy } from './effects/galaxy.js';
+import { createAlienMushrooms } from './effects/alien-mushrooms.js';
+import { createSpaceship } from './effects/spaceship.js';
+import { createPortalVortex } from './effects/portal-vortex.js';
+import { createPortalVortexBottom } from './effects/portal-vortex-bottom.js';
+import { createCats } from './effects/cats.js';
+import { createEnergySphere } from './effects/energy-sphere.js';
 
 const CFG = window.CONFIG;
 if (!CFG) throw new Error('CONFIG missing');
@@ -61,7 +68,19 @@ const solarSystem   = createSolarSystem(scene);
 const blackHole     = createBlackHole(scene);
 const planets       = createPlanets(scene);
 const nebula        = createNebula(scene);
-
+const galaxy        = createGalaxy(scene);
+// 🎯 Nấm ngoài hành tinh — đối diện thiên hà
+const alienMushrooms = createAlienMushrooms(scene);
+// 🎯 Tàu vũ trụ
+const spaceship = createSpaceship(scene);
+// 🎯 Lốc xoáy trên đỉnh
+const portalVortex = createPortalVortex(scene);
+// 🎯 Cổng xoáy dưới đáy
+const portalVortexBottom = createPortalVortexBottom(scene);
+// 🎯 3 con mèo — góc dưới trái
+const cats = createCats(scene);
+// 🎯 Quả cầu năng lượng bao trùm
+const energySphere = createEnergySphere(scene);
 /* =========================================================
    ẢNH SPRITE
    ========================================================= */
@@ -209,9 +228,10 @@ for (let i = 0; i < CFG.wordCount; i++) {
 const cam = {
   yaw: CFG.camYaw, pitch: CFG.camPitch,
   tyaw: CFG.camYaw, tpitch: CFG.camPitch,
-  dist: 55, tdist: 55,
+  dist: 800, tdist: 50,
   dragging: false, lx: 0, ly: 0,
   inside: false,
+  introDone: false,
 };
 
 canvas.addEventListener('pointerdown', (e) => {
@@ -232,8 +252,9 @@ window.addEventListener('pointermove', (e) => {
 });
 window.addEventListener('wheel', (e) => {
   if (!cam.inside) return;
+  cam.introDone = true;
   cam.tdist += e.deltaY * 0.05;
-  cam.tdist = Math.max(7, Math.min(220, cam.tdist));
+  cam.tdist = Math.max(7, Math.min(1000, cam.tdist));
 }, { passive: true });
 
 /* =========================================================
@@ -250,11 +271,22 @@ function animate() {
 
   globalHue = (globalHue + dt * 0.08) % 1;
 
-  cam.yaw   += (cam.tyaw   - cam.yaw)   * 0.18;
-  cam.pitch += (cam.tpitch - cam.pitch) * 0.18;
-  cam.dist  += (cam.tdist  - cam.dist)  * 0.12;
+  // 🎯 Camera chỉ di chuyển khi đã bấm "Mở thiệp"
+  if (cam.inside) {
+    cam.yaw   += (cam.tyaw   - cam.yaw)   * 0.18;
+    cam.pitch += (cam.tpitch - cam.pitch) * 0.18;
 
-  const yaw = cam.yaw, pitch = cam.pitch, r = cam.dist;
+    const distSpeed = cam.introDone ? 0.2 : 0.001;
+    cam.dist += (cam.tdist - cam.dist) * distSpeed;
+
+    if (!cam.introDone && Math.abs(cam.dist - cam.tdist) < 1) {
+      cam.introDone = true;
+    }
+  }
+
+  const yaw = cam.yaw;
+  const pitch = cam.pitch;
+  const r = cam.dist;
   camera.position.x = Math.sin(yaw) * r * Math.cos(pitch);
   camera.position.y = Math.sin(pitch) * r;
   camera.position.z = Math.cos(yaw) * r * Math.cos(pitch);
@@ -293,6 +325,17 @@ function animate() {
   blackHole.update(now * 0.001);
   planets.update(now * 0.001);
   nebula.update(now * 0.001, dt);
+  galaxy.update(now * 0.001);
+  alienMushrooms.update(now * 0.001);
+  spaceship.update(now * 0.001);
+  portalVortex.update(now * 0.001);
+  portalVortexBottom.update(now * 0.001);
+  cats.update(now * 0.001);
+  energySphere.update(now * 0.001, dt);
+
+  
+
+ 
 
   renderer.render(scene, camera);
 }
@@ -347,7 +390,6 @@ document.getElementById('enterBtn').addEventListener('click', () => {
   cam.inside = true;
   setTimeout(() => uiEl.classList.add('show'), 1200);
 
-  // Nhạc
   bgMusic.play().then(() => {
     musicPlaying = true;
     updateMusicBtn();
@@ -357,7 +399,5 @@ document.getElementById('enterBtn').addEventListener('click', () => {
   });
 
   setTimeout(() => musicBtn.classList.add('show'), 1500);
-
-  // Viền LED
   setTimeout(() => startLedBorder(), 800);
 });
